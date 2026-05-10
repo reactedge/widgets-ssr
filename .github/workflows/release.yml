@@ -31,9 +31,13 @@ jobs:
             ./ \
             ${{ secrets.WIDGET_SSH_USER }}@${{ secrets.WIDGET_SSH_HOST }}:/var/www/ssr/
 
-      - name: Restart production containers
+      - name: Install and restart SSR
         run: |
           ssh ${{ secrets.WIDGET_SSH_USER }}@${{ secrets.WIDGET_SSH_HOST }} << 'EOF'
             cd /var/www/ssr
-            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            npm ci
+            npm run build
+            pm2 restart widgets-ssr || pm2 start npm --name "widgets-ssr" -- run start
+            pm2 save
           EOF
