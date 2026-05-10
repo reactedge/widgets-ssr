@@ -1,4 +1,6 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+if (process.env.ALLOW_SELF_SIGNED_SSL === 'true') {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 import 'dotenv/config';
 
 import express from 'express';
@@ -7,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 function resolveEntry(widget: string): string {
-    return `/workspace/widget-${widget}/vite_project/src/ssr/entry.tsx`;
+    return `${process.env.SSR_WIDGET_ROOT}/widget-${widget}/vite_project/src/ssr/entry.tsx`;
 }
 
 async function fetchContract(widget: string, contract: string) {
@@ -55,7 +57,7 @@ app.post('/render', async (req, res) => {
     }
 });
 
-app.listen(3001, '0.0.0.0', () => {
-    console.log('Widgets SSR runtime listening on :3001');
+app.listen( process.env.SSR_PORT, '0.0.0.0', () => {
+    console.log(`Widgets SSR runtime listening on :${process.env.SSR_PORT}`);
     console.log('Widgets SSR runtime WIDGETS_CDN_URL', process.env.WIDGETS_CDN_URL);
 });
