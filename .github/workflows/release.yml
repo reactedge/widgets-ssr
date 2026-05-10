@@ -1,0 +1,39 @@
+name: Deploy SSR Runtime
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-ssr:
+    runs-on: ubuntu-latest
+    environment: reactedge
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WIDGET_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -H ${{ secrets.WIDGET_SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Sync SSR runtime
+        run: |
+          rsync -avz --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude ".github" \
+            ./ \
+            ${{ secrets.WIDGET_SSH_USER }}@${{ secrets.WIDGET_SSH_HOST }}:/var/www/ssr/
+
+      - name: Restart production containers
+        run: |
+          ssh ${{ secrets.WIDGET_SSH_USER }}@${{ secrets.WIDGET_SSH_HOST }} << 'EOF'
+            cd /var/www/ssr
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+          EOF
