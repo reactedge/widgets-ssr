@@ -28,6 +28,7 @@ jobs:
             --exclude ".git" \
             --exclude "node_modules" \
             --exclude ".github" \
+            --exclude ".env" \
             ./ \
             ${{ secrets.WIDGET_SSH_USER }}@${{ secrets.WIDGET_SSH_HOST }}:/var/www/ssr/
 
